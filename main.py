@@ -2,37 +2,45 @@ import cv2
 import mediapipe as mp
 
 
-def process(img, face_detection):
-    height, width, _ = img.shape
+def anonymize_faces(frame, detector):
+    height, width = frame.shape[:2]
 
-    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    results = face_detection.process(img_rgb)
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = detector.process(rgb_frame)
 
     if results.detections:
         for detection in results.detections:
-            bbox = detection.location_data.relative_bounding_box
+            box = detection.location_data.relative_bounding_box
 
-            x1 = int(bbox.xmin * width)
-            y1 = int(bbox.ymin * height)
-            x2 = int((bbox.xmin + bbox.width) * width)
-            y2 = int((bbox.ymin + bbox.height) * height)
+            x1 = max(0, int(box.xmin * width))
+            y1 = max(0, int(box.ymin * height))
 
-            x1 = max(0, x1)
-            y1 = max(0, y1)
-            x2 = min(width, x2)
-            y2 = min(height, y2)
+            x2 = min(
+                width,
+                int((box.xmin + box.width) * width)
+            )
+
+            y2 = min(
+                height,
+                int((box.ymin + box.height) * height)
+            )
 
             if x2 > x1 and y2 > y1:
-                face_region = img[y1:y2, x1:x2]
-                img[y1:y2, x1:x2] = cv2.blur(face_region, (50, 50))
+                face = frame[y1:y2, x1:x2]
 
-    return img
+                frame[y1:y2, x1:x2] = cv2.GaussianBlur(
+                    face,
+                    (51, 51),
+                    0
+                )
+
+    return frame
 
 
 def main():
-    cap = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(0)
 
-    if not cap.isOpened():
+    if not camera.isOpened():
         print("Error: Could not access the webcam.")
         return
 
@@ -41,9 +49,33 @@ def main():
     with mp_face_detection.FaceDetection(
         model_selection=0,
         min_detection_confidence=0.5
-    ) as face_detection:
+    ) as detector:
 
-        print("Real-Time Face Anonymizer started.")
-        print("Press 'q' to quit.")
+        print("Real-Time Face Anonymizer Started")
+        print("Press Q to exit")
 
         while True:
+            success, frame = camera.read()
+
+            if not success:
+                print("Error: Could not read webcam frame.")
+                break
+
+            frame = anonymize_faces(frame, detector)
+
+            cv2.imshow(
+                "Real-Time Face Anonymizer",
+                frame
+            )
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+    camera.release()
+    cv2.destroyAllWindows()
+
+    print("Application closed.")
+
+
+if __name__ == "__main__":
+    main()
