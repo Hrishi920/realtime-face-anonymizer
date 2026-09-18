@@ -17,13 +17,11 @@ def process(img, face_detection):
             x2 = int((bbox.xmin + bbox.width) * width)
             y2 = int((bbox.ymin + bbox.height) * height)
 
-            # Keep bounding box inside the image
             x1 = max(0, x1)
             y1 = max(0, y1)
             x2 = min(width, x2)
             y2 = min(height, y2)
 
-            # Apply blur only if the bounding box is valid
             if x2 > x1 and y2 > y1:
                 face_region = img[y1:y2, x1:x2]
                 img[y1:y2, x1:x2] = cv2.blur(face_region, (50, 50))
