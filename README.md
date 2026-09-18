@@ -112,11 +112,10 @@ The project follows these steps:
 3. The frame is converted from BGR to RGB format.
 4. MediaPipe Face Detection processes the frame and identifies faces.
 5. The relative bounding box of each detected face is converted into pixel coordinates.
-6. The detected face region is extracted from the frame.
-7. OpenCV blur is applied to the face region.
-8. The processed frame is displayed in real time.
+6. The detected face bounding box is converted into valid image coordinates.
+7. The corresponding face region is extracted and Gaussian blur is applied using OpenCV.
+8. The anonymized frame is displayed in real time.
 9. The process continues until the user presses `q`.
-
 ## Configuration
 
 The project uses the default webcam:
@@ -187,4 +186,3 @@ Possible future extensions include:
 **Hrisheekesh S**
 
 
-Hrisheekesh S
